@@ -1,0 +1,155 @@
+# ──────────────── VERSION CONTROL ────────────────
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# ──────────────── DOCKER FILES ────────────────
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile*
+.dockerignore
+
+# ──────────────── DATA & VOLUMES (mounted at runtime) ────────────────
+data/
+logs/
+models/
+results/
+plugins/
+
+# ──────────────── SOURCE CODE (mounted at runtime) ────────────────
+# Since you're mounting src/ as volume, exclude from build
+src/
+dags/
+
+# ──────────────── ENVIRONMENT & CONFIG ────────────────
+.env
+.env.*
+.envrc
+*.env
+
+# ──────────────── PYTHON ────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ──────────────── JUPYTER NOTEBOOKS ────────────────
+.ipynb_checkpoints
+*.ipynb
+
+# ──────────────── IDE & EDITOR FILES ────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+.nvim/
+
+# ──────────────── OS FILES ────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ──────────────── DOCUMENTATION ────────────────
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# ──────────────── CI/CD ────────────────
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+Jenkinsfile
+
+# ──────────────── MONITORING & CONFIG ────────────────
+monitoring/
+prometheus/
+grafana/
+
+# ──────────────── TEMPORARY FILES ────────────────
+*.tmp
+*.temp
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# ──────────────── NODE.JS (if any) ────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ──────────────── TESTING ────────────────
+.coverage
+.pytest_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+
+# ──────────────── PYTORCH & ML ────────────────
+wandb/
+mlruns/
+*.pth
+*.pt
+*.model
+checkpoints/
+
+# ──────────────── AIRFLOW SPECIFIC ────────────────
+airflow.cfg
+airflow.db
+standalone_admin_password.txt
+
+# ──────────────── DATABASE FILES ────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ──────────────── ARCHIVES ────────────────
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ──────────────── SECRETS & KEYS ────────────────
+*.pem
+*.key
+*.cert
+secrets/
+.secrets/

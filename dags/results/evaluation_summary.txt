@@ -1,0 +1,9 @@
+
+==================================================
+Evaluation completed at: 2025-07-25T13:04:43.711652
+Model: /opt/airflow/models/best_graphsage_model.pth
+Test AUC: 0.9143
+Test Accuracy: 0.8336
+Device: cpu
+Test samples: 20000 (Pos: 10000, Neg: 10000)
+==================================================

@@ -1,0 +1,27 @@
+# Core ML Libraries (installed via Dockerfile)
+# torch==2.0.1
+# torch-geometric==2.3.1
+
+# ML Pipeline
+scikit-learn>=1.1.0
+pandas>=1.4.0
+numpy>=1.21.0
+
+# Database & Storage
+neo4j>=5.0.0
+python-dotenv>=0.19.0
+
+# MLflow Integration
+mlflow>=2.5.0
+
+# Monitoring Stack
+prometheus-client>=0.16.0
+statsd>=3.3.0
+
+# FastAPI (for future model serving)
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+pydantic>=2.0.0
+
+# Additional utilities
+requests>=2.28.0

@@ -1,0 +1,14 @@
+[
+  {
+    "model_path": "/opt/airflow/models/best_graphsage_model.pth",
+    "test_auc": 0.914274715,
+    "test_accuracy": 0.8336,
+    "evaluated_at": "2025-07-25T13:04:43.711652",
+    "device_used": "cpu",
+    "model_architecture": "GraphSAGE",
+    "hidden_dim": 128,
+    "test_samples": 20000,
+    "positive_samples": 10000,
+    "negative_samples": 10000
+  }
+]

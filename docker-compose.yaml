@@ -1,0 +1,328 @@
+services:
+  # ──────────────── EXISTING SERVICES ────────────────
+  postgres:
+    image: postgres:13
+    container_name: gnn-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+    networks:
+      - gnn-network
+
+  redis:
+    image: redis:latest
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+    networks:
+      - gnn-network
+
+  neo4j:
+    image: neo4j:4.4-community
+    container_name: neo4j-gnn
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/gnnproject123
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_memory_heap_initial_size=256m
+      - NEO4J_dbms_memory_heap_max_size=1G
+      # Prometheus metrics disabled for now
+      # - NEO4J_metrics_prometheus_enabled=true
+      # - NEO4J_metrics_prometheus_endpoint=0.0.0.0:2004
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "gnnproject123", "RETURN 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: always
+    networks:
+      - gnn-network
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.0
+    container_name: mlflow
+    command: mlflow server \
+             --backend-store-uri sqlite:///mlflow.db \
+             --default-artifact-root /mlflow/artifacts \
+             --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    networks:
+      - gnn-network
+
+  # ──────────────── TEMPORARILY DISABLED: MONITORING STACK ────────────────
+  # prometheus:
+  #   image: prom/prometheus:v2.47.0
+  #   container_name: prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus-data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
+  #     - '--web.console.templates=/etc/prometheus/consoles'
+  #     - '--web.enable-lifecycle'
+  #     - '--web.enable-admin-api'
+  #   restart: always
+  #   networks:
+  #     - gnn-network
+
+  # grafana:
+  #   image: grafana/grafana:10.1.0
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=gnnproject123
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #     - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+  #     - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+  #   restart: always
+  #   networks:
+  #     - gnn-network
+  #   depends_on:
+  #     - prometheus
+
+  # statsd-exporter:
+  #   image: prom/statsd-exporter:v0.24.0
+  #   container_name: statsd-exporter
+  #   ports:
+  #     - "9102:9102"
+  #     - "9125:9125/udp"
+  #   volumes:
+  #     - ./monitoring/statsd_mapping.yml:/statsd_mapping.yml
+  #   command:
+  #     - '--statsd.mapping-config=/statsd_mapping.yml'
+  #     - '--statsd.listen-udp=:9125'
+  #     - '--web.listen-address=:9102'
+  #   restart: always
+  #   networks:
+  #     - gnn-network
+
+  # node-exporter:
+  #   image: prom/node-exporter:v1.6.1
+  #   container_name: node-exporter
+  #   ports:
+  #     - "9100:9100"
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/rootfs:ro
+  #   command:
+  #     - '--path.procfs=/host/proc'
+  #     - '--path.rootfs=/rootfs'
+  #     - '--path.sysfs=/host/sys'
+  #     - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+  #   restart: always
+  #   networks:
+  #     - gnn-network
+
+  # ──────────────── AIRFLOW SERVICES ────────────────
+  x-airflow-common: &airflow-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: custom-airflow:torch
+    environment: &airflow-common-env
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      # Performance optimizations
+      AIRFLOW__CORE__PARALLELISM: 4
+      AIRFLOW__CORE__DAG_CONCURRENCY: 2
+      AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 1
+      # MLflow integration
+      AIRFLOW__MLFLOW__TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: ""
+      # TEMPORARILY DISABLED: Prometheus/StatsD metrics
+      # AIRFLOW__METRICS__STATSD_ON: "True"
+      # AIRFLOW__METRICS__STATSD_HOST: "statsd-exporter"
+      # AIRFLOW__METRICS__STATSD_PORT: "9125"
+      # AIRFLOW__METRICS__STATSD_PREFIX: "airflow"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+      - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+      - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
+      - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+      - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src
+    user: "${AIRFLOW_UID:-50000}:0"
+    depends_on: &airflow-common-depends-on
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      # statsd-exporter:  # Commented out
+      #   condition: service_started
+    networks:
+      - gnn-network
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        function ver() {
+          printf "%04d%04d%04d%04d" $${1//./ }
+        }
+        airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
+        airflow_version_comparable=$$(ver $${airflow_version})
+        min_airflow_version=2.2.0
+        min_airflow_version_comparable=$$(ver $${min_airflow_version})
+        if (( airflow_version_comparable < min_airflow_version_comparable )); then
+          echo
+          echo -e "\033[1;31mERROR!!!: Too old Airflow version $${airflow_version}!\e[0m"
+          echo "The minimum Airflow version supported: $${min_airflow_version}. Only use this or higher!"
+          echo
+          exit 1
+        fi
+        mkdir -p /sources/logs /sources/dags /sources/plugins
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
+    user: "0:0"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}:/sources
+
+  # ──────────────── FUTURE: FASTAPI SERVICE ────────────────
+  # fastapi-server:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile.api
+  #   container_name: gnn-api
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - NEO4J_URI=bolt://neo4j:7687
+  #     - NEO4J_USER=neo4j
+  #     - NEO4J_PASSWORD=gnnproject123
+  #     - MLFLOW_TRACKING_URI=http://mlflow:5000
+  #     - PROMETHEUS_MULTIPROC_DIR=/tmp
+  #   volumes:
+  #     - ${AIRFLOW_PROJ_DIR:-.}/models:/app/models
+  #   depends_on:
+  #     - neo4j
+  #     - mlflow
+  #     - prometheus
+  #   networks:
+  #     - gnn-network
+
+networks:
+  gnn-network:
+    driver: bridge
+
+volumes:
+  postgres-db-volume:
+  neo4j-data:
+  neo4j-logs:
+  mlflow-data:
+  # Commented out monitoring volumes for now
+  # prometheus-data:
+  # grafana-data:
