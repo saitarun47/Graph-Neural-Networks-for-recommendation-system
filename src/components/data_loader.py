@@ -1,10 +1,23 @@
 import pandas as pd
+import os
 
 def load_raw_data():
     """Load raw data files from the mounted data directory."""
-    df_ratings = pd.read_csv("/opt/airflow/data/u.data", sep="\t", header=None,
+    
+    
+    if os.path.exists("/opt/airflow/data"):
+        data_dir = "/opt/airflow/data"  # Airflow environment
+    elif os.path.exists("/app/data"):
+        data_dir = "/app/data"          # FastAPI container
+    else:
+        data_dir = "data"               # Local development fallback
+    
+    print(f"Using data directory: {data_dir}")  
+    
+    # Load data files
+    df_ratings = pd.read_csv(f"{data_dir}/u.data", sep="\t", header=None,
                              names=["user_id", "item_id", "rating", "timestamp"])
-    df_users = pd.read_csv("/opt/airflow/data/u.user", sep="|", header=None,
+    df_users = pd.read_csv(f"{data_dir}/u.user", sep="|", header=None,
                            names=["user_id", "age", "gender", "occupation", "zip_code"])
     
     item_cols = ["movie_id", "movie_title", "release_date", "video_release_date", "IMDb_URL",
@@ -12,7 +25,7 @@ def load_raw_data():
                  "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror",
                  "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western"]
     
-    df_items = pd.read_csv("/opt/airflow/data/u.item", sep="|", header=None, 
+    df_items = pd.read_csv(f"{data_dir}/u.item", sep="|", header=None, 
                           names=item_cols, encoding="latin-1")
 
     # Map user/movie IDs

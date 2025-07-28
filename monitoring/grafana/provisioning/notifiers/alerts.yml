@@ -1,0 +1,19 @@
+notifiers:
+  - name: email-alerts
+    type: email
+    uid: email1
+    org_id: 1
+    is_default: true
+    settings:
+      addresses: "tanuj00047@gmail.com"
+      subject: " GraphSAGE Alert: {{ .Title }}"
+
+  - name: retraining-webhook
+    type: webhook
+    uid: webhook1
+    org_id: 1
+    settings:
+      url: "http://airflow-webserver:8080/api/v1/dags/retrain_graphsage/dagRuns"
+      httpMethod: "POST"
+      username: "admin"
+      password: "admin"

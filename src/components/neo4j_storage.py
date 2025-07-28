@@ -5,7 +5,7 @@ import os
 
 def store_data_in_neo4j(data):
     """Store processed data in Neo4j database."""
-    print("🚀 Starting optimized Neo4j storage...")
+    print(" Starting optimized Neo4j storage...")
     
     load_dotenv()  
     pwd = os.getenv("NEO4J_PASSWORD")  
@@ -16,11 +16,11 @@ def store_data_in_neo4j(data):
     try:
         with driver.session() as session:
             # Clear existing data
-            print("🗑️ Clearing existing data...")
+            print(" Clearing existing data...")
             session.run("MATCH (n) DETACH DELETE n")
             
-            # ✅ BATCH CREATE USERS (much more efficient)
-            print(f"👥 Creating {len(data['user_features'])} users in batch...")
+         
+            print(f"Creating {len(data['user_features'])} users in batch...")
             user_batch = []
             for i, features in enumerate(data['user_features']):
                 user_batch.append({
@@ -43,11 +43,11 @@ def store_data_in_neo4j(data):
                             num_ratings: user.num_rat
                         })
                     """, users=user_batch)
-                    print(f"✅ Created {len(user_batch)} users")
+                    print(f"Created {len(user_batch)} users")
                     user_batch = []  # Clear batch
                     gc.collect()  # Force garbage collection
             
-            # ✅ BATCH CREATE MOVIES
+            
             print(f"🎬 Creating {len(data['movie_features'])} movies in batch...")
             movie_batch = []
             for i, features in enumerate(data['movie_features']):
@@ -69,11 +69,11 @@ def store_data_in_neo4j(data):
                             num_ratings: movie.num_ratings
                         })
                     """, movies=movie_batch)
-                    print(f"✅ Created {len(movie_batch)} movies")
+                    print(f"Created {len(movie_batch)} movies")
                     movie_batch = []
                     gc.collect()
             
-            # ✅ BATCH CREATE RELATIONSHIPS
+      
             splits = data['splits']
             
             def create_edges_batch(edges, split_name, label):
@@ -96,7 +96,7 @@ def store_data_in_neo4j(data):
                             MATCH (m:Movie {id: edge.movie_id})
                             CREATE (u)-[:RATES {split: edge.split, label: edge.label}]->(m)
                         """, edges=edge_batch)
-                        print(f"✅ Created {len(edge_batch)} edges")
+                        print(f"Created {len(edge_batch)} edges")
                         edge_batch = []
                         gc.collect()
                 
@@ -108,7 +108,7 @@ def store_data_in_neo4j(data):
                         MATCH (m:Movie {id: edge.movie_id})
                         CREATE (u)-[:RATES {split: edge.split, label: edge.label}]->(m)
                     """, edges=edge_batch)
-                    print(f"✅ Created final {len(edge_batch)} edges")
+                    print(f"Created final {len(edge_batch)} edges")
 
             # Create all relationship types
             create_edges_batch(splits['train_pos'], 'train', 1)
@@ -120,9 +120,9 @@ def store_data_in_neo4j(data):
             
     finally:
         driver.close()
-        gc.collect()  # Final cleanup
+        gc.collect()  
     
-    print("🎉 Neo4j storage completed successfully!")
+    print("Neo4j storage completed successfully!")
     
     return {
         "message": "Data stored in Neo4j successfully",

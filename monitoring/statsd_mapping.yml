@@ -1,0 +1,36 @@
+mappings:
+  # FastAPI GraphSAGE API metrics
+  - match: "graphsage.recommendations.total"
+    name: "graphsage_recommendations_total"
+    labels:
+      user_type: "$1"
+      strategy: "$2"
+  
+  - match: "graphsage.recommendations.duration_seconds"
+    name: "graphsage_recommendations_duration_seconds"
+    labels:
+      user_type: "$1"
+      strategy: "$2"
+  
+  - match: "graphsage.model.prediction_score"
+    name: "graphsage_model_prediction_score"
+    labels:
+      user_id: "$1"
+  # API request metrics
+  - match: "graphsage.api.request_duration"
+    name: "graphsage_api_request_duration_seconds"
+    labels:
+      method: "$1"
+      endpoint: "$2"
+  
+  - match: "graphsage.api.requests"
+    name: "graphsage_api_requests_total"
+    labels:
+      method: "$1"
+      status_code: "$2"
+  
+  # Airflow metrics
+  - match: "airflow.*"
+    name: "airflow_${1}"
+    labels:
+      component: "airflow"

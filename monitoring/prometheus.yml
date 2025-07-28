@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # FastAPI application metrics
+  - job_name: 'fastapi-graphsage'
+    static_configs:
+      - targets: ['gnn-api:8000']  # Changed from fastapi-server to gnn-api
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # StatsD Exporter (for FastAPI custom metrics)
+  - job_name: 'statsd-exporter'
+    static_configs:
+      - targets: ['statsd-exporter:9102']
+
+  # Neo4j metrics
+  - job_name: 'neo4j'
+    static_configs:
+      - targets: ['neo4j:2004']
+    metrics_path: '/metrics'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Airflow metrics (via StatsD)
+  - job_name: 'airflow'
+    static_configs:
+      - targets: ['statsd-exporter:9102']
+    metrics_path: '/metrics'

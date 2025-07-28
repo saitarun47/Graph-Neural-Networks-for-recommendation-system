@@ -13,29 +13,29 @@ def train_model(data, context):
     u_feats = torch.tensor(data['user_features'], dtype=torch.float)
     m_feats = torch.tensor(data['movie_features'], dtype=torch.float)
 
-    print(f"📊 User features shape: {u_feats.shape}")
-    print(f"📊 Movie features shape: {m_feats.shape}")
+    print(f"User features shape: {u_feats.shape}")
+    print(f"Movie features shape: {m_feats.shape}")
 
-    # Pad user features from 4 to 21 dimensions
-    padding_size = m_feats.shape[1] - u_feats.shape[1]  # 21 - 4 = 17
+   
+    padding_size = m_feats.shape[1] - u_feats.shape[1]  
     user_padding = torch.zeros(u_feats.shape[0], padding_size)
     u_feats_padded = torch.cat([u_feats, user_padding], dim=1)
     
-    print(f"✅ Padded user features shape: {u_feats_padded.shape}")
+    print(f"Padded user features shape: {u_feats_padded.shape}")
 
-    # Now concatenate with matching dimensions
+   
     x = torch.cat([u_feats_padded, m_feats], dim=0)
     num_users = len(u_feats_padded)
     
-    print(f"📊 Combined features shape: {x.shape}")
-    print(f"👥 Number of users: {num_users}")
+    print(f"Combined features shape: {x.shape}")
+    print(f"Number of users: {num_users}")
     
     # Build edge tensors
     def build_edge_tensors(pos_edges, neg_edges):
         all_edges = pos_edges + neg_edges
         edge_index = torch.tensor([
             [edge['user_id_mapped'] for edge in all_edges],
-            [edge['movie_id_mapped'] + num_users for edge in all_edges]  # Offset movie IDs
+            [edge['movie_id_mapped'] + num_users for edge in all_edges]  
         ], dtype=torch.long)
         labels = torch.tensor([1] * len(pos_edges) + [0] * len(neg_edges), dtype=torch.float)
         return edge_index, labels
@@ -52,7 +52,7 @@ def train_model(data, context):
     
     # Training setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"📱 Using device: {device}")
+    print(f"Using device: {device}")
     
     model = SimpleGraphSAGE(x.size(1), hidden_dim=128).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-4)

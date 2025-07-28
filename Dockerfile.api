@@ -1,13 +1,16 @@
-FROM apache/airflow:2.7.1-python3.9
+FROM python:3.9-slim
 
+WORKDIR /app
 
-USER root
-COPY requirements.txt /tmp/requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements 
+COPY requirements.txt .
 
-USER airflow
-
-
+# Install PyTorch and dependencies
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir \
            torch==2.0.1+cpu \
@@ -21,4 +24,13 @@ RUN pip install --no-cache-dir --upgrade pip \
            torch-cluster==1.6.1+pt20cpu \
            torch-spline-conv==1.2.2+pt20cpu \
            --find-links https://data.pyg.org/whl/torch-2.0.1+cpu.html \
-    && pip install --no-cache-dir -r /tmp/requirements.txt
+    && pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Run the FastAPI application
+CMD ["python", "main.py"]

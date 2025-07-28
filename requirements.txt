@@ -17,6 +17,7 @@ mlflow>=2.5.0
 # Monitoring Stack
 prometheus-client>=0.16.0
 statsd>=3.3.0
+prometheus-fastapi-instrumentator
 
 # FastAPI (for future model serving)
 fastapi>=0.100.0

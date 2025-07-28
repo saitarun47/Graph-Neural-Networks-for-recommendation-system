@@ -1,0 +1,161 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "GraphSAGE Recommendation System",
+    "description": "Monitoring dashboard for GraphSAGE movie recommendation API",
+    "tags": ["graphsage", "recommendations", "ml"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(graphsage_api_requests_POST_200{job=\"statsd-exporter\"}[5m])",
+            "legendFormat": "Successful Requests/sec",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Recommendation Response Times",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(graphsage_recommendations_duration_seconds_existing_gnn_model_sum{job=\"statsd-exporter\"}[5m]) / rate(graphsage_recommendations_duration_seconds_existing_gnn_model_count{job=\"statsd-exporter\"}[5m])",
+            "legendFormat": "Avg Response Time",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(graphsage_api_request_duration_POST__recommendations_sum{job=\"statsd-exporter\"}[5m]) / rate(graphsage_api_request_duration_POST__recommendations_count{job=\"statsd-exporter\"}[5m])",
+            "legendFormat": "Overall API Response Time",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "s",
+            "min": 0
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Recommendations by User Type",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "graphsage_recommendations_total_existing_gnn_model{job=\"statsd-exporter\"}",
+            "legendFormat": "Existing Users",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {"mode": "single", "sort": "none"},
+          "legend": {"displayMode": "visible", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 4,
+        "title": "Model Prediction Scores",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "graphsage_model_prediction_score_existing{job=\"statsd-exporter\"}",
+            "legendFormat": "Existing User Predictions",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 0.85},
+                {"color": "green", "value": 0.90}
+              ]
+            },
+            "min": 0,
+            "max": 1,
+            "unit": "percentunit"
+          }
+        },
+        "alert": {
+          "name": "GraphSAGE Model Performance Degradation",
+          "message": "🚨 GraphSAGE prediction scores have dropped below acceptable threshold",
+          "frequency": "1m",
+          "conditions": [
+            {
+              "query": {"queryType": "", "refId": "A"},
+              "reducer": {"type": "avg", "params": []},
+              "evaluator": {"params": [0.85], "type": "lt"}
+            }
+          ],
+          "executionErrorState": "alerting",
+          "noDataState": "no_data",
+          "for": "5m"
+        }
+      },
+      {
+        "id": 5,
+        "title": "System Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "graphsage_model_total_users{job=\"statsd-exporter\"}",
+            "legendFormat": "Total Users",
+            "refId": "A"
+          },
+          {
+            "expr": "graphsage_model_total_movies{job=\"statsd-exporter\"}",
+            "legendFormat": "Total Movies",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 16}
+      }
+    ],
+    "time": {"from": "now-1h", "to": "now"},
+    "refresh": "5s",
+    "annotations": {
+      "list": [
+        {
+          "name": "Annotations & Alerts",
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "type": "dashboard"
+        }
+      ]
+    }
+  }
+}
