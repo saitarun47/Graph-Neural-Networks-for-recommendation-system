@@ -40,7 +40,7 @@ Traditional methods (**matrix factorization, simple collaborative filtering**) c
 - **Multi-Strategy Recs**: Supports classic, content-based, GNN-based, and hybrid recommendations  
 - **Smart Automated Retraining**: Alerts trigger retraining when model performance drops  
 
-## 🧠 Under the Hood: GraphSAGE Architecture
+## Under the Hood: GraphSAGE Architecture
 
 **Model Highlights**  
 - 3 GraphSAGE layers (mean aggregators, residual connections, batchnorm, dropout)  
@@ -70,7 +70,7 @@ Traditional methods (**matrix factorization, simple collaborative filtering**) c
 - **Prometheus + Grafana**: Collects and visualizes metrics like API latency, model accuracy, and user engagement  
 - **Alerting**: Grafana-based alerts auto-trigger retraining via webhook/Airflow if model performance drops  
 
-## 💻 Quickstart
+## Quickstart
 
 ### Prerequisites
 - Docker & Docker Compose  
@@ -79,10 +79,11 @@ Traditional methods (**matrix factorization, simple collaborative filtering**) c
 
 ### Run with Docker Compose
 
-git clone https://github.com/saitarun47/Graph-Neural-Networks-for-recommendation-system
-cd gnn-movie-recommendation
-
+```bash
+git clone https://github.com/saitarun47/Graph-Neural-Networks-for-recommendation-system.git
+cd Graph-Neural-Networks-for-recommendation-system
 docker-compose up -d
+```
 
 
 ### Access Services
@@ -95,37 +96,43 @@ docker-compose up -d
 - **Neo4j Browser**: http://localhost:7474  
 
 
-### Run the Pipeline
+### Trigger Training Pipeline
 
-Trigger the training pipeline (optional)
-curl -X POST http://localhost:8080/api/v1/dags/gnn_dag/dagRuns
--H "Content-Type: application/json"
--d '{"conf": {}}'
--u airflow:airflow
+```bash
+curl -X POST "http://localhost:8080/api/v1/dags/gnn_dag/dagRuns"   -H "Content-Type: application/json"   -u airflow:airflow   -d '{"conf": {}}'
+```
 
 ## API Usage
 
 ### Get Recommendations
 
-For existing users
-curl -X POST "http://localhost:8000/recommendations"
--H "Content-Type: application/json"
--d '{
-"user_id": 1,
-"num_recommendations": 10
-}'
+#### Existing Users
 
-For new users
-curl -X POST "http://localhost:8000/recommendations"
--H "Content-Type: application/json"
--d '{
-"user_profile": {"preferred_genres": ["Action", "Sci-Fi"], "age": 25},
-"strategy": "hybrid",
-"num_recommendations": 10
-}'
+```bash
+curl -X POST "http://localhost:8000/recommendations"   -H "Content-Type: application/json"   -d '{
+    "user_id": 1,
+    "num_recommendations": 10
+  }'
+```
+
+#### New Users
+
+```bash
+curl -X POST "http://localhost:8000/recommendations"   -H "Content-Type: application/json"   -d '{
+    "user_profile": {
+      "preferred_genres": ["Action", "Sci-Fi"],
+      "age": 25
+    },
+    "strategy": "hybrid",
+    "num_recommendations": 10
+  }'
+```
 
 ### Health Check
+
+```bash
 curl http://localhost:8000/health
+```
 
 ## Monitoring & Observability
 
@@ -144,30 +151,33 @@ curl http://localhost:8000/health
 ## Development
 
 ### Local Development Setup
-Create virtual environment
+
+```bash
 python -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+# Windows
+venv\Scriptsctivate
 
-Install dependencies
 pip install -r requirements.txt
-
-Run FastAPI locally
 python main.py
-
-text
+```
 
 ### Project Structure
 
+```
 gnn/
-├── dags/ # Airflow DAGs
-├── data/ # Raw datasets
-├── models/ # Saved models
-├── monitoring/ # Prometheus & Grafana configs
-├── src/
-│ └── components/ # Core ML components
+├── dags/                # Airflow DAG definitions
+├── data/                # Raw and processed datasets
+├── models/              # Saved model checkpoints
+├── monitoring/          # Prometheus & Grafana configs
+├── src/                 # Core Python modules
+│   └── components/      # GNN, data loaders, utils, etc.
 ├── docker-compose.yaml
-├── main.py # FastAPI application
-└── requirements.txt # Python dependencies
+├── main.py              # FastAPI application entrypoint
+└── requirements.txt     # Python dependencies
+```
+
 
 
 ## Key Features
