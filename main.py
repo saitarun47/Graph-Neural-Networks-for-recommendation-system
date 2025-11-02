@@ -171,7 +171,7 @@ def load_model_and_data():
         model.load_state_dict(torch.load('models/best_graphsage_model.pth', map_location=device))
         model.eval()
         
-        logger.info("✅ Model and data loaded successfully")
+        logger.info("Model and data loaded successfully")
         
         # Track model loading metrics
         if statsd_client:
