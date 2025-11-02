@@ -13,10 +13,10 @@
 
 **This project delivers a GraphSAGE-powered movie recommender with a full MLOps pipeline — all in a scalable, observable production architecture.**
 
-- **API**: Fast, robust, and ready for millions of requests  
+- **API**: Fast, robust, and ready for requests  
 - **Real-time intelligence**: Observability with Prometheus/Grafana; alerts and retraining baked in  
 - **Data science engineering**: GraphSAGE inductive GNN, not just off-the-shelf collaborative filtering  
-- **MLOps automation**: Airflow DAGs, MLflow tracking, model governance, and Dockerized deployments  
+- **MLOps automation**: Airflow DAGs, MLflow tracking, model monitoring, and Dockerized deployments  
 
 ## Why Graph Neural Networks for Recommendations?
 
@@ -36,9 +36,9 @@ Traditional methods (**matrix factorization, simple collaborative filtering**) c
 - **Advanced GNN**: GraphSAGE model, 3 layers, residual connections, dropout, inductive node generalization  
 - **MLOps Pipelines**: Orchestrated with Apache Airflow, traceable with MLflow, containers with Docker  
 - **Observability**: System, API, and model monitoring with Prometheus metrics & Grafana dashboards  
-- **API-first**: Async FastAPI REST, OpenAPI docs, and ready-to-deploy microservices  
+- **API-first**: Async FastAPI REST 
 - **Multi-Strategy Recs**: Supports classic, content-based, GNN-based, and hybrid recommendations  
-- **Smart Automated Retraining**: Alerts trigger retraining when model performance drops  
+  
 
 ## Under the Hood: GraphSAGE Architecture
 
